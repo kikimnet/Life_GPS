@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-base: #0e0e10;
+  --color-surface: #1c1c1f;
+  --color-border-subtle: #2d2d30;
+  --color-accent-blue: #5e6ad2;
+  --color-accent-green: #2ea043;
+  --color-accent-red: #f85149;
+  --color-text-primary: #ededed;
+  --color-text-secondary: #8f8f94;
+
+  /* Mental Level colors */
+  --level-5: #a855f7;
+  --level-4: #6366f1;
+  --level-3: #3b82f6;
+  --level-2: #14b8a6;
+  --level-1: #6b7280;
+}
+
+:root {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    opacity: 0.04;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.09;
+    transform: scale(1.08);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+/* Hide scrollbar but keep scroll */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2d2d30;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d3d40;
+}
+
+/* Smooth tab focus outlines */
+* {
+  outline-color: #5e6ad2;
+}
+
+/* Tabular numbers for timers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,28 @@
+# ─── LifeGPS — Docker Compose ────────────────────────────────────────────────
+# Container isolé de PMOplus
+# Port interne : 80 → Port VPS : 3001 (en local uniquement, nginx host proxifie)
+
+services:
+  lifegps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Variables Supabase / Stripe / PostHog — compilées dans le bundle Vite
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
+        VITE_STRIPE_PRO_PRICE_ID: ${VITE_STRIPE_PRO_PRICE_ID}
+        VITE_STRIPE_PREMIUM_PRICE_ID: ${VITE_STRIPE_PREMIUM_PRICE_ID}
+        VITE_POSTHOG_KEY: ${VITE_POSTHOG_KEY}
+        VITE_POSTHOG_HOST: ${VITE_POSTHOG_HOST}
+    image: lifegps:latest
+    container_name: lifegps
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:80"   # exposé uniquement en local → nginx host fait le proxy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
