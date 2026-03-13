@@ -1,6 +1,29 @@
 import { useState } from 'react';
 import { useApp, MENTAL_LEVELS, type MentalLevel } from '../context/AppContext';
-import { Plus, X, Clock, Target as TargetIcon, Zap } from 'lucide-react';
+import { Plus, X, Clock, Target as TargetIcon, Zap, Info } from 'lucide-react';
+
+const LEVEL_TOOLTIPS: Record<MentalLevel, { description: string; examples: string[] }> = {
+    5: {
+        description: 'Réflexion à long terme, vision systémique, création de sens et de direction.',
+        examples: ['Définir sa mission de vie', 'Imaginer un business dans 10 ans', 'Écrire sa vision d\'avenir', 'Repenser son modèle de valeurs'],
+    },
+    4: {
+        description: 'Planification, prise de décision complexe, arbitrages stratégiques.',
+        examples: ['Construire une roadmap trimestrielle', 'Choisir entre deux offres de carrière', 'Définir les priorités annuelles', 'Concevoir une stratégie go-to-market'],
+    },
+    3: {
+        description: 'Traitement d\'information, résolution de problèmes, apprentissage actif.',
+        examples: ['Analyser un rapport financier', 'Lire et synthétiser un livre', 'Déboguer un problème complexe', 'Rédiger une étude comparative'],
+    },
+    2: {
+        description: 'Exécution directe, implémentation, travail de production concentré.',
+        examples: ['Coder une fonctionnalité', 'Écrire un rapport', 'Préparer une présentation', 'Répondre aux emails importants'],
+    },
+    1: {
+        description: 'Tâches routinières à faible charge cognitive, gestion administrative.',
+        examples: ['Classer des documents', 'Mettre à jour un tableau', 'Répondre à des emails simples', 'Planifier son agenda'],
+    },
+};
 
 const initialForm = { title: '', details: '', mentalLevel: 3 as MentalLevel, objectiveId: '', estimatedMinutes: 90 };
 
@@ -15,6 +38,7 @@ export const DeepWork = () => {
     const { missions, objectives, addMission, toggleMission, deleteMission, pomodoroSessions } = useApp();
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ ...initialForm });
+    const [tooltipLevel, setTooltipLevel] = useState<MentalLevel | null>(null);
 
     const todayStr = new Date().toISOString().split('T')[0];
     const todayMissions = missions.filter(m => m.date === todayStr);
@@ -147,10 +171,40 @@ export const DeepWork = () => {
                         <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#fff', margin: '0 0 14px' }}>Niveaux Mentaux</h3>
                         {([5, 4, 3, 2, 1] as MentalLevel[]).map(l => {
                             const ml = MENTAL_LEVELS[l];
+                            const tip = LEVEL_TOOLTIPS[l];
+                            const isOpen = tooltipLevel === l;
                             return (
-                                <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                    <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: ml.bg, color: ml.color, minWidth: '28px', textAlign: 'center' }}>{ml.short}</span>
-                                    <span style={{ fontSize: '13px', color: '#9ca3af' }}>{ml.label.slice(3)}</span>
+                                <div key={l} style={{ marginBottom: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: ml.bg, color: ml.color, minWidth: '28px', textAlign: 'center' }}>{ml.short}</span>
+                                        <span style={{ fontSize: '13px', color: '#9ca3af', flex: 1 }}>{ml.label.slice(3)}</span>
+                                        <button
+                                            onClick={() => setTooltipLevel(isOpen ? null : l)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: isOpen ? ml.color : '#4b5563', padding: '2px', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
+                                            title="En savoir plus"
+                                        >
+                                            <Info size={14} />
+                                        </button>
+                                    </div>
+                                    {isOpen && (
+                                        <div style={{
+                                            marginTop: '8px', marginLeft: '38px',
+                                            background: 'rgba(255,255,255,0.04)',
+                                            border: `1px solid ${ml.color}33`,
+                                            borderLeft: `3px solid ${ml.color}`,
+                                            borderRadius: '8px',
+                                            padding: '10px 12px',
+                                            animation: 'fadeIn 0.15s ease',
+                                        }}>
+                                            <p style={{ fontSize: '12px', color: '#d1d5db', margin: '0 0 8px', lineHeight: 1.5 }}>{tip.description}</p>
+                                            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Exemples</div>
+                                            <ul style={{ margin: 0, paddingLeft: '14px' }}>
+                                                {tip.examples.map((ex, i) => (
+                                                    <li key={i} style={{ fontSize: '12px', color: ml.color, opacity: 0.85, marginBottom: '2px' }}>{ex}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
