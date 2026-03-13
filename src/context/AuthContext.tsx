@@ -103,8 +103,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
+        // Safety timeout: force loading=false after 5s if Supabase doesn't respond
+        const timeout = setTimeout(() => setLoading(false), 5000);
+
         // Real Supabase auth flow
         supabase.auth.getSession().then(({ data: { session } }) => {
+            clearTimeout(timeout);
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) fetchProfile(session.user.id);
@@ -124,7 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         );
 
-        return () => subscription.unsubscribe();
+        return () => { subscription.unsubscribe(); clearTimeout(timeout); };
     }, []);
 
     // Persist demo flag so refresh keeps the demo session
