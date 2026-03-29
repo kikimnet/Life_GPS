@@ -1,23 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { supabaseConfigured } from '../../lib/supabase';
 import { track, Events } from '../../lib/analytics';
-import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
-
-type Tab = 'login' | 'register';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export const Login = () => {
-    const { signIn, signUp, signInDemo, user, isDemo } = useAuth();
+    const { signIn, user, isDemo } = useAuth();
     const navigate = useNavigate();
-    const [tab, setTab] = useState<Tab>('login');
-    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
 
     // Dès que l'utilisateur est authentifié, naviguer vers le dashboard
     useEffect(() => {
@@ -25,64 +19,31 @@ export const Login = () => {
             navigate('/', { replace: true });
         }
     }, [user, isDemo, navigate]);
-
-    // Demo mode
-    const [showDemoName, setShowDemoName] = useState(false);
-    const [demoName, setDemoName] = useState('');
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setSuccess(null);
         setLoading(true);
 
-        // Timeout 12s pour éviter le spinner infini si Supabase ne répond pas
         const timeout = new Promise<{ error: string }>((resolve) =>
-            setTimeout(() => resolve({ error: 'Délai d’attente dépassé. Vérifiez votre connexion ou réessayez.' }), 12000)
+            setTimeout(() => resolve({ error: 'Délai d\'attente dépassé. Vérifiez votre connexion ou réessayez.' }), 12000)
         );
 
         try {
-            if (tab === 'login') {
-                const result = await Promise.race([
-                    signIn(email, password),
-                    timeout,
-                ]) as { error: string | null };
+            const result = await Promise.race([
+                signIn(email, password),
+                timeout,
+            ]) as { error: string | null };
 
-                if (result.error) {
-                    setError(result.error);
-                    setLoading(false);
-                } else {
-                    track(Events.USER_SIGNED_IN);
-                    // Ne pas naviguer ici — le useEffect ci-dessus s'en charge
-                    // quand onAuthStateChange met à jour `user`
-                }
+            if (result.error) {
+                setError(result.error);
             } else {
-                if (!name.trim()) { setError('Le nom est requis.'); setLoading(false); return; }
-                if (password.length < 8) { setError('Le mot de passe doit faire au moins 8 caractères.'); setLoading(false); return; }
-                const result = await Promise.race([
-                    signUp(email, password, name),
-                    timeout,
-                ]) as { error: string | null };
-
-                if (result.error) {
-                    setError(result.error);
-                } else {
-                    track(Events.USER_SIGNED_UP);
-                    setSuccess('Compte créé ! Vérifiez votre email pour confirmer votre inscription.');
-                }
-                setLoading(false);
+                track(Events.USER_SIGNED_IN);
             }
         } catch (err: any) {
             setError(err.message || 'Une erreur inattendue est survenue.');
+        } finally {
             setLoading(false);
         }
-    };
-
-    const handleDemo = () => {
-        const finalName = demoName.trim() || 'Karim';
-        track(Events.USER_SIGNED_IN, { mode: 'demo' });
-        signInDemo(finalName);
-        navigate('/');
     };
 
     return (
@@ -112,109 +73,52 @@ export const Login = () => {
                     <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>Le GPS de votre productivité</p>
                 </div>
 
-                {/* ── Demo Mode Banner (when Supabase not configured) ── */}
-                {!supabaseConfigured && (
-                    <div style={{
-                        background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.3)',
-                        borderRadius: '14px', padding: '20px', marginBottom: '16px',
+                {/* Beta badge */}
+                <div style={{
+                    textAlign: 'center', marginBottom: '20px',
+                }}>
+                    <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        padding: '6px 14px', borderRadius: '20px',
+                        background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)',
+                        fontSize: '12px', fontWeight: 700, color: '#f59e0b',
+                        letterSpacing: '0.05em', textTransform: 'uppercase',
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                            <Zap size={18} color="#6366f1" />
-                            <span style={{ fontSize: '14px', fontWeight: 700, color: '#e5e7eb' }}>Accès rapide — Mode démo</span>
-                        </div>
-                        <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 14px', lineHeight: 1.5 }}>
-                            Supabase n'est pas encore configuré. Accédez à l'application en mode démo avec accès <strong style={{ color: '#a78bfa' }}>Premium complet</strong>.
-                        </p>
+                        🔒 Bêta privée — Accès sur invitation
+                    </span>
+                </div>
 
-                        {showDemoName ? (
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <input
-                                    value={demoName}
-                                    onChange={e => setDemoName(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && handleDemo()}
-                                    placeholder="Votre prénom (ex: Karim)"
-                                    autoFocus
-                                    style={{
-                                        flex: 1, background: '#111113', border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '8px', padding: '10px 14px', color: '#e5e7eb',
-                                        fontSize: '14px', fontFamily: 'inherit', outline: 'none',
-                                    }}
-                                />
-                                <button onClick={handleDemo} style={{
-                                    padding: '10px 18px', borderRadius: '8px', border: 'none',
-                                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                    color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
-                                }}>
-                                    Entrer →
-                                </button>
-                            </div>
-                        ) : (
-                            <button onClick={() => setShowDemoName(true)} style={{
-                                width: '100%', padding: '12px', borderRadius: '10px', border: 'none',
-                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                            }}>
-                                <Zap size={16} /> Continuer en mode démo (Premium)
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Card */}
+                {/* Card — login only */}
                 <div style={{
                     background: '#1a1a1e', borderRadius: '20px',
                     border: '1px solid rgba(255,255,255,0.08)', padding: '32px',
                     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-                    opacity: !supabaseConfigured ? 0.5 : 1,
                 }}>
-                    {!supabaseConfigured && (
-                        <div style={{ textAlign: 'center', marginBottom: '16px', fontSize: '12px', color: '#6b7280' }}>
-                            ⚠️ Connexion désactivée — Supabase non configuré
-                        </div>
-                    )}
-
-                    {/* Tabs */}
-                    <div style={{ display: 'flex', background: '#111113', borderRadius: '10px', padding: '3px', marginBottom: '28px' }}>
-                        {(['login', 'register'] as Tab[]).map(t => (
-                            <button key={t} onClick={() => { setTab(t); setError(null); setSuccess(null); }} style={{
-                                flex: 1, padding: '9px', borderRadius: '8px', border: 'none', fontSize: '14px', fontWeight: 600,
-                                cursor: 'pointer', transition: 'all 0.15s',
-                                background: tab === t ? '#6366f1' : 'transparent',
-                                color: tab === t ? '#fff' : '#6b7280',
-                            }}>
-                                {t === 'login' ? 'Connexion' : 'Inscription'}
-                            </button>
-                        ))}
+                    <div style={{
+                        textAlign: 'center', marginBottom: '24px',
+                        fontSize: '16px', fontWeight: 700, color: '#e5e7eb',
+                    }}>
+                        Connexion
                     </div>
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {tab === 'register' && (
-                            <div>
-                                <label style={labelStyle}>Nom complet</label>
-                                <input value={name} onChange={e => setName(e.target.value)} placeholder="Prénom Nom"
-                                    disabled={!supabaseConfigured} required style={inputStyle} />
-                            </div>
-                        )}
                         <div>
                             <label style={labelStyle}>Adresse email</label>
                             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                                placeholder="vous@exemple.com" disabled={!supabaseConfigured} required style={inputStyle} />
+                                placeholder="vous@exemple.com" required style={inputStyle} />
                         </div>
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-                                <label style={{ ...labelStyle, marginBottom: 0 }}>Mot de passe {tab === 'register' && <span style={{ color: '#6b7280', fontWeight: 400 }}>(min. 8 caractères)</span>}</label>
-                                {tab === 'login' && (
-                                    <Link to="/forgot-password" style={{ fontSize: '12px', color: '#6366f1', textDecoration: 'none' }}>
-                                        Mot de passe oublié ?
-                                    </Link>
-                                )}
+                                <label style={{ ...labelStyle, marginBottom: 0 }}>Mot de passe</label>
+                                <Link to="/forgot-password" style={{ fontSize: '12px', color: '#6366f1', textDecoration: 'none' }}>
+                                    Mot de passe oublié ?
+                                </Link>
                             </div>
                             <div style={{ position: 'relative' }}>
                                 <input type={showPassword ? 'text' : 'password'} value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    placeholder={tab === 'register' ? 'Créer un mot de passe' : 'Votre mot de passe'}
-                                    disabled={!supabaseConfigured} required
+                                    placeholder="Votre mot de passe"
+                                    required
                                     style={{ ...inputStyle, paddingRight: '44px' }} />
                                 <button type="button" onClick={() => setShowPassword(v => !v)} style={{
                                     position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
@@ -230,44 +134,26 @@ export const Login = () => {
                                 ⚠️ {error}
                             </div>
                         )}
-                        {success && (
-                            <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#6ee7b7', fontSize: '13px' }}>
-                                ✅ {success}
-                            </div>
-                        )}
 
-                        <button type="submit" disabled={loading || !supabaseConfigured} style={{
+                        <button type="submit" disabled={loading} style={{
                             padding: '13px', borderRadius: '10px', border: 'none',
                             background: loading ? 'rgba(99,102,241,0.5)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            color: '#fff', fontSize: '15px', fontWeight: 700, cursor: (loading || !supabaseConfigured) ? 'default' : 'pointer',
+                            color: '#fff', fontSize: '15px', fontWeight: 700,
+                            cursor: loading ? 'default' : 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                            marginTop: '4px', transition: 'opacity 0.15s', opacity: !supabaseConfigured ? 0.4 : 1,
+                            marginTop: '4px', transition: 'opacity 0.15s',
                         }}>
                             {loading && <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />}
-                            {tab === 'login' ? 'Se connecter' : 'Créer mon compte'}
+                            Se connecter
                         </button>
                     </form>
-
-                    {tab === 'login' && (
-                        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                            <Link to="/pricing" style={{ fontSize: '13px', color: '#6366f1', textDecoration: 'none' }}>
-                                Pas encore de compte ? Voir les plans →
-                            </Link>
-                        </div>
-                    )}
                 </div>
 
-                {/* Plans teaser */}
-                {tab === 'register' && (
-                    <div style={{ marginTop: '20px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                        {[{ label: '🆓 Gratuit', desc: 'Pour commencer' }, { label: '⭐ Pro 9$/mois', desc: 'Statistiques & IA' }, { label: '💎 Premium 19$/mois', desc: 'Tout inclus' }].map(p => (
-                            <div key={p.label} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', fontSize: '12px', color: '#9ca3af', textAlign: 'center' }}>
-                                <div style={{ fontWeight: 600, color: '#e5e7eb' }}>{p.label}</div>
-                                <div>{p.desc}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                {/* Footer */}
+                <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '12px', color: '#4b5563' }}>
+                    L'inscription n'est pas encore disponible.<br />
+                    Contactez l'administrateur pour obtenir un accès.
+                </p>
             </div>
 
             <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
