@@ -18,6 +18,8 @@ import { RevueMensuelle } from './pages/RevueMensuelle';
 import { Journal } from './pages/Journal';
 import { Parametres } from './pages/Parametres';
 import { Login } from './pages/auth/Login';
+import { ForgotPassword } from './pages/auth/ForgotPassword';
+import { ResetPassword } from './pages/auth/ResetPassword';
 import { Pricing } from './pages/Pricing';
 import { PlanGate } from './components/PlanGate';
 import { initAnalytics } from './lib/analytics';
@@ -84,6 +86,8 @@ function App() {
           <Routes>
             {/* ── Public routes ── */}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/pricing" element={<Pricing />} />
 
             {/* ── Protected routes ── */}

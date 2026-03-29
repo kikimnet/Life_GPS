@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp, type Objective, type Priority, type ObjectifStatus } from '../context/AppContext';
 import { Plus, X, ChevronRight, Settings, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 const PRIORITIES: Priority[] = ['haute', 'moyenne', 'basse'];
 const PRIORITY_COLORS: Record<Priority, string> = { haute: '#ef4444', moyenne: '#f59e0b', basse: '#6b7280' };
@@ -169,6 +170,10 @@ export const Objectifs = () => {
 
     const wip = getWIPStatus();
     const activeObjectives = objectives.filter(o => o.status === 'actif');
+
+    // Dirty = modal ouvert ET titre rempli
+    const isDirty = showModal && form.title.trim().length > 0;
+    useUnsavedChanges(isDirty);
 
     // Objective with highest progress (best candidate to finish)
     const highestProgress = activeObjectives.length > 0

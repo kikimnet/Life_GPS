@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Plus, X, ChevronDown } from 'lucide-react';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 export const PlansActions = () => {
     const { actionPlans, objectives, addActionPlan, updateActionPlan, deleteActionPlan } = useApp();
@@ -22,6 +23,9 @@ export const PlansActions = () => {
         else addActionPlan(form);
         setShowModal(false);
     };
+
+    const isDirty = showModal && form.description.trim().length > 0;
+    useUnsavedChanges(isDirty);
 
     const STATUS_COLORS: Record<string, string> = { 'todo': '#6b7280', 'in-progress': '#f59e0b', 'done': '#10b981' };
     const STATUS_LABELS: Record<string, string> = { 'todo': 'À faire', 'in-progress': 'En cours', 'done': 'Terminé' };

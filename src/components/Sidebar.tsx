@@ -67,10 +67,24 @@ export const Sidebar = () => {
     const isPro = hasAccess(plan, 'pro');
 
     const handleSignOut = async () => {
-        track(Events.USER_SIGNED_OUT);
-        resetAnalytics();
-        await signOut();
-        navigate('/login');
+        // Vérifie s'il y a des modifications non sauvegardées
+        const hasUnsaved = (window as any).__lifegps_unsaved_changes === true;
+        if (hasUnsaved) {
+            const confirmed = window.confirm(
+                'Vous avez des modifications non enregistrées.\nVoulez-vous quand même vous déconnecter ?'
+            );
+            if (!confirmed) return;
+        }
+
+        try {
+            track(Events.USER_SIGNED_OUT);
+            resetAnalytics();
+            await signOut();
+        } catch (err) {
+            console.error('Erreur déconnexion:', err);
+        } finally {
+            navigate('/login');
+        }
     };
 
     return (

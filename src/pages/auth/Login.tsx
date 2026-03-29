@@ -175,7 +175,14 @@ export const Login = () => {
                                 placeholder="vous@exemple.com" disabled={!supabaseConfigured} required style={inputStyle} />
                         </div>
                         <div>
-                            <label style={labelStyle}>Mot de passe {tab === 'register' && <span style={{ color: '#6b7280', fontWeight: 400 }}>(min. 8 caractères)</span>}</label>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                                <label style={{ ...labelStyle, marginBottom: 0 }}>Mot de passe {tab === 'register' && <span style={{ color: '#6b7280', fontWeight: 400 }}>(min. 8 caractères)</span>}</label>
+                                {tab === 'login' && (
+                                    <Link to="/forgot-password" style={{ fontSize: '12px', color: '#6366f1', textDecoration: 'none' }}>
+                                        Mot de passe oublié ?
+                                    </Link>
+                                )}
+                            </div>
                             <div style={{ position: 'relative' }}>
                                 <input type={showPassword ? 'text' : 'password'} value={password}
                                     onChange={e => setPassword(e.target.value)}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp, type JournalTag } from '../context/AppContext';
 import { Plus, X, Trash2, Edit2 } from 'lucide-react';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 const TAG_COLORS: Record<JournalTag, { color: string; bg: string }> = {
     leçon: { color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
@@ -17,6 +18,10 @@ export const Journal = () => {
     const [editId, setEditId] = useState<string | null>(null);
     const [form, setForm] = useState({ ...initialForm });
 
+    // Dirty = modal ouvert ET au moins un champ rempli
+    const isDirty = showModal && (form.title.trim().length > 0 || form.content.trim().length > 0);
+    useUnsavedChanges(isDirty);
+
     const openAdd = () => { setForm({ ...initialForm }); setEditId(null); setShowModal(true); };
     const openEdit = (e: typeof journal[0]) => {
         setForm({ title: e.title, tag: e.tag, content: e.content, date: e.date });
@@ -28,6 +33,7 @@ export const Journal = () => {
         else addJournalEntry(form);
         setShowModal(false);
     };
+    const closeModal = () => setShowModal(false);
 
     return (
         <div style={{ padding: '32px 40px', minHeight: '100vh' }}>
@@ -108,7 +114,7 @@ export const Journal = () => {
                     <div style={{ background: '#1a1a1e', borderRadius: '16px', width: '100%', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 0' }}>
                             <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0 }}>{editId ? 'Modifier l\'entrée' : 'Nouvelle entrée'}</h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer' }}><X size={20} /></button>
+                            <button onClick={closeModal} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer' }}><X size={20} /></button>
                         </div>
                         <div style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
@@ -136,7 +142,7 @@ export const Journal = () => {
                             </div>
                             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '8px' }}>
                                 {editId && <button onClick={() => { deleteJournalEntry(editId); setShowModal(false); }} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)', background: 'transparent', color: '#ef4444', fontSize: '14px', cursor: 'pointer' }}>Supprimer</button>}
-                                <button onClick={() => setShowModal(false)} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#9ca3af', fontSize: '14px', cursor: 'pointer' }}>Annuler</button>
+                                <button onClick={closeModal} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#9ca3af', fontSize: '14px', cursor: 'pointer' }}>Annuler</button>
                                 <button onClick={save} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#6366f1', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Sauvegarder</button>
                             </div>
                         </div>

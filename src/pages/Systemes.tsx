@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Plus, X, RefreshCw } from 'lucide-react';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 const FREQ_LABELS: Record<string, string> = { quotidien: 'QUOTIDIEN', hebdomadaire: 'HEBDOMADAIRE', 'jours-spécifiques': 'JOURS SPÉCIFIQUES' };
 const FREQ_COLORS: Record<string, string> = { quotidien: '#34d399', hebdomadaire: '#60a5fa', 'jours-spécifiques': '#f59e0b' };
@@ -27,6 +28,9 @@ export const Systemes = () => {
         else addSystem(form);
         setShowModal(false);
     };
+
+    const isDirty = showModal && form.name.trim().length > 0;
+    useUnsavedChanges(isDirty);
 
     const getObjName = (id: string) => objectives.find(o => o.id === id)?.title ?? '';
     const getDomain = (id: string) => objectives.find(o => o.id === id)?.domain ?? '';

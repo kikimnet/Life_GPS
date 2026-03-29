@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp, DOMAIN_COLORS } from '../context/AppContext';
 import { Plus, X } from 'lucide-react';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 const ICON_OPTIONS = ['💼', '💰', '⭐', '🎯', '✨', '🌿', '❤️', '🏋️', '📚', '🎨', '🏠', '🌎'];
 
@@ -9,6 +10,10 @@ export const Vision = () => {
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
     const [form, setForm] = useState({ name: '', vision: '', description: '', icon: '💼' });
+
+    // Dirty = modal ouvert ET nom rempli
+    const isDirty = showModal && form.name.trim().length > 0;
+    useUnsavedChanges(isDirty);
 
     const openAdd = () => { setForm({ name: '', vision: '', description: '', icon: '💼' }); setEditId(null); setShowModal(true); };
     const openEdit = (d: typeof domains[0]) => { setForm({ name: d.name, vision: d.vision, description: d.description, icon: d.icon ?? '💼' }); setEditId(d.id); setShowModal(true); };

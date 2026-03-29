@@ -162,11 +162,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const signOut = async () => {
         if (isDemo) {
             localStorage.removeItem('lifegps_demo_active');
+            localStorage.removeItem(DEMO_KEY);
+            // Réinitialise aussi le flag de modifications non sauvegardées
+            (window as any).__lifegps_unsaved_changes = false;
             setIsDemo(false);
             setProfile(null);
             return;
         }
-        await supabase.auth.signOut();
+        try {
+            await supabase.auth.signOut();
+        } catch (err) {
+            console.error('Supabase signOut error (ignored):', err);
+        }
+        (window as any).__lifegps_unsaved_changes = false;
+        setUser(null);
+        setSession(null);
         setProfile(null);
     };
 

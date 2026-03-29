@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User, Bell, Globe, Cpu } from 'lucide-react';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 type Tab = 'profil' | 'système' | 'notifications' | 'intégrations';
 
@@ -40,6 +41,10 @@ export const Parametres = () => {
     const [timezone, setTimezone] = useState('America/Toronto');
     const [notifications, setNotifications] = useState({ email: true, remind: true, weekly: false });
     const [pomodoroDuration, setPomodoroDuration] = useState(25);
+    const [saved, setSaved] = useState(true);
+
+    // Dirty = profil modifié et pas encore sauvegardé
+    useUnsavedChanges(!saved);
 
     return (
         <div style={{ padding: '32px 40px', minHeight: '100vh' }}>
@@ -68,13 +73,13 @@ export const Parametres = () => {
                 <div style={{ maxWidth: '600px' }}>
                     <SectionCard title="Informations personnelles">
                         <SettingRow label="Nom d'utilisateur">
-                            <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+                            <input value={name} onChange={e => { setName(e.target.value); setSaved(false); }} style={inputStyle} />
                         </SettingRow>
                         <SettingRow label="Email">
-                            <input value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
+                            <input value={email} onChange={e => { setEmail(e.target.value); setSaved(false); }} style={inputStyle} />
                         </SettingRow>
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <button style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#6366f1', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                            <button onClick={() => setSaved(true)} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#6366f1', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                                 Sauvegarder
                             </button>
                         </div>
