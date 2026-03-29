@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { Plus, X, Trash2 } from 'lucide-react';
 
 const REVIEW_FIELDS = {
@@ -16,6 +17,8 @@ export const RevueHebdo = () => {
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState<Record<string, string>>({ wins: '', failures: '', obstacles: '', adjustments: '' });
     const weeklyReviews = reviews.filter(r => r.type === 'hebdo');
+
+    useUnsavedChanges(showModal && Object.values(form).some(v => v.trim().length > 0));
 
     const save = () => {
         const period = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });

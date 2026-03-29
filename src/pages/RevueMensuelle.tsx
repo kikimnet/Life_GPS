@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { Plus, X, Trash2 } from 'lucide-react';
 
 const REVIEW_FIELDS = [
@@ -14,6 +15,8 @@ export const RevueMensuelle = () => {
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState<Record<string, string>>({ bigVictories: '', timeWasters: '', bestSystems: '', nextMonthPriorities: '' });
     const monthlyReviews = reviews.filter(r => r.type === 'mensuel');
+
+    useUnsavedChanges(showModal && Object.values(form).some(v => v.trim().length > 0));
 
     const save = () => {
         const period = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 
 const DAYS_LABELS = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
@@ -35,6 +36,8 @@ export const Suivi = () => {
     const [weekOffset, setWeekOffset] = useState(0);
     const dates = getDateRange(weekOffset);
     const todayStr = new Date().toISOString().split('T')[0];
+
+    useUnsavedChanges(false); // auto-save toggles, no pending changes
 
     const totalToday = systems.filter(s => s.isActive).length;
     const doneToday = systems.filter(s => s.isActive && getHabitStatus(s.id, todayStr) === 'done').length;

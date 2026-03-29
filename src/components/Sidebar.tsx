@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Eye, Target, BookMarked, Calendar, RefreshCw,
@@ -6,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth, hasAccess } from '../context/AuthContext';
 import { PlanBadge } from './PlanGate';
+import { ConfirmModal } from './ConfirmModal';
 import { track, Events, resetAnalytics } from '../lib/analytics';
 
 const SectionLabel = ({ children }: { children: string }) => (
@@ -63,19 +65,21 @@ const NavItem = ({ to, icon, label, locked }: NavItemProps) => (
 export const Sidebar = () => {
     const navigate = useNavigate();
     const { profile, plan, signOut } = useAuth();
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const isPro = hasAccess(plan, 'pro');
 
-    const handleSignOut = async () => {
-        // Vérifie s'il y a des modifications non sauvegardées
+    const handleSignOutClick = () => {
         const hasUnsaved = (window as any).__lifegps_unsaved_changes === true;
         if (hasUnsaved) {
-            const confirmed = window.confirm(
-                'Vous avez des modifications non enregistrées.\nVoulez-vous quand même vous déconnecter ?'
-            );
-            if (!confirmed) return;
+            setShowLogoutConfirm(true);
+            return;
         }
+        performSignOut();
+    };
 
+    const performSignOut = async () => {
+        setShowLogoutConfirm(false);
         try {
             track(Events.USER_SIGNED_OUT);
             resetAnalytics();
@@ -141,7 +145,7 @@ export const Sidebar = () => {
                 <NavItem to="/pricing" icon={<CreditCard size={16} />} label="Plans & Tarifs" />
                 <NavItem to="/parametres" icon={<Settings size={16} />} label="Paramètres" />
                 <button
-                    onClick={handleSignOut}
+                    onClick={handleSignOutClick}
                     style={{
                         display: 'flex', alignItems: 'center', gap: '10px',
                         padding: '9px 16px', margin: '1px 8px', borderRadius: '8px',
@@ -152,6 +156,17 @@ export const Sidebar = () => {
                     <LogOut size={16} />
                     Se déconnecter
                 </button>
+
+                <ConfirmModal
+                    open={showLogoutConfirm}
+                    title="Modifications non sauvegardées"
+                    message="Vous avez des modifications non enregistrées. Voulez-vous quand même vous déconnecter ? Les changements non sauvegardés seront perdus."
+                    confirmLabel="Se déconnecter"
+                    cancelLabel="Rester"
+                    variant="warning"
+                    onConfirm={performSignOut}
+                    onCancel={() => setShowLogoutConfirm(false)}
+                />
 
                 {/* User card */}
                 <div style={{

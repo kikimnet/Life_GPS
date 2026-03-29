@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { Plus, X } from 'lucide-react';
 
 const DAYS_FR = ['LU', 'MA', 'ME', 'JE', 'VE', 'SA', 'DI'];
@@ -9,6 +10,8 @@ export const FocusSemaine = () => {
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ priority: '', details: '', weekDays: DAYS_FR });
     const currentFocus = getCurrentWeekFocus();
+
+    useUnsavedChanges(showModal && form.priority.trim().length > 0);
 
     const getWeekStart = () => {
         const d = new Date();

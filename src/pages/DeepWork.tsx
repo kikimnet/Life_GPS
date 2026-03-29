@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp, MENTAL_LEVELS, type MentalLevel } from '../context/AppContext';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { Plus, X, Clock, Target as TargetIcon, Zap, Info } from 'lucide-react';
 
 const LEVEL_TOOLTIPS: Record<MentalLevel, { description: string; examples: string[] }> = {
@@ -39,6 +40,8 @@ export const DeepWork = () => {
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ ...initialForm });
     const [tooltipLevel, setTooltipLevel] = useState<MentalLevel | null>(null);
+
+    useUnsavedChanges(showModal && form.title.trim().length > 0);
 
     const todayStr = new Date().toISOString().split('T')[0];
     const todayMissions = missions.filter(m => m.date === todayStr);

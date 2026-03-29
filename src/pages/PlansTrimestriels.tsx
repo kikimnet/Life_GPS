@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 const QUARTER_STATUS_COLORS: Record<string, string> = { planifié: '#6b7280', 'en-cours': '#f59e0b', terminé: '#10b981' };
@@ -15,6 +16,8 @@ export const PlansTrimestriels = () => {
     const [form, setForm] = useState({ ...initialForm });
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     const [yearFilter, setYearFilter] = useState(CURRENT_YEAR);
+
+    useUnsavedChanges(showModal);
 
     const openAdd = (objectiveId = '') => {
         setForm({ ...initialForm, objectiveId: objectiveId || objectives[0]?.id || '' });
