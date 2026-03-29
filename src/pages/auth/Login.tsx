@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabaseConfigured } from '../../lib/supabase';
@@ -8,7 +8,7 @@ import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
 type Tab = 'login' | 'register';
 
 export const Login = () => {
-    const { signIn, signUp, signInDemo } = useAuth();
+    const { signIn, signUp, signInDemo, user, isDemo } = useAuth();
     const navigate = useNavigate();
     const [tab, setTab] = useState<Tab>('login');
     const [name, setName] = useState('');
@@ -18,6 +18,13 @@ export const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    // Dès que l'utilisateur est authentifié, naviguer vers le dashboard
+    useEffect(() => {
+        if (user || isDemo) {
+            navigate('/', { replace: true });
+        }
+    }, [user, isDemo, navigate]);
 
     // Demo mode
     const [showDemoName, setShowDemoName] = useState(false);
@@ -29,26 +36,46 @@ export const Login = () => {
         setSuccess(null);
         setLoading(true);
 
-        if (tab === 'login') {
-            const { error } = await signIn(email, password);
-            if (error) {
-                setError(error);
+        // Timeout 12s pour éviter le spinner infini si Supabase ne répond pas
+        const timeout = new Promise<{ error: string }>((resolve) =>
+            setTimeout(() => resolve({ error: 'Délai d’attente dépassé. Vérifiez votre connexion ou réessayez.' }), 12000)
+        );
+
+        try {
+            if (tab === 'login') {
+                const result = await Promise.race([
+                    signIn(email, password),
+                    timeout,
+                ]) as { error: string | null };
+
+                if (result.error) {
+                    setError(result.error);
+                    setLoading(false);
+                } else {
+                    track(Events.USER_SIGNED_IN);
+                    // Ne pas naviguer ici — le useEffect ci-dessus s'en charge
+                    // quand onAuthStateChange met à jour `user`
+                }
             } else {
-                track(Events.USER_SIGNED_IN);
-                navigate('/');
+                if (!name.trim()) { setError('Le nom est requis.'); setLoading(false); return; }
+                if (password.length < 8) { setError('Le mot de passe doit faire au moins 8 caractères.'); setLoading(false); return; }
+                const result = await Promise.race([
+                    signUp(email, password, name),
+                    timeout,
+                ]) as { error: string | null };
+
+                if (result.error) {
+                    setError(result.error);
+                } else {
+                    track(Events.USER_SIGNED_UP);
+                    setSuccess('Compte créé ! Vérifiez votre email pour confirmer votre inscription.');
+                }
+                setLoading(false);
             }
-        } else {
-            if (!name.trim()) { setError('Le nom est requis.'); setLoading(false); return; }
-            if (password.length < 8) { setError('Le mot de passe doit faire au moins 8 caractères.'); setLoading(false); return; }
-            const { error } = await signUp(email, password, name);
-            if (error) {
-                setError(error);
-            } else {
-                track(Events.USER_SIGNED_UP);
-                setSuccess('Compte créé ! Vérifiez votre email pour confirmer votre inscription.');
-            }
+        } catch (err: any) {
+            setError(err.message || 'Une erreur inattendue est survenue.');
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleDemo = () => {
