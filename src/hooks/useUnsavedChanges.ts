@@ -14,3 +14,13 @@ export const useUnsavedChanges = (isDirty: boolean) => {
         };
     }, [isDirty]);
 };
+
+/** Retrieve the current unsaved changes flag */
+export const getUnsavedChanges = (): boolean => {
+    return !!(window as any).__lifegps_unsaved_changes;
+};
+
+/** Reset the unsaved changes flag manually */
+export const resetUnsavedChanges = (): void => {
+    (window as any).__lifegps_unsaved_changes = false;
+};
