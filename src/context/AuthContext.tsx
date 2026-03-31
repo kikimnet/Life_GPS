@@ -209,10 +209,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(null);
     };
 
+    // Admin override: si l'email est admin, forcer le plan admin
+    const isAdminUser = user?.email ? ADMIN_EMAILS.includes(user.email.toLowerCase()) : false;
+    const effectivePlan = isAdminUser ? 'admin' as Plan : (profile?.plan ?? 'free');
+    const effectiveProfile = profile && isAdminUser && profile.plan !== 'admin'
+        ? { ...profile, plan: 'admin' as Plan }
+        : profile;
+
     return (
         <AuthContext.Provider value={{
-            user, session, profile, loading,
-            plan: profile?.plan ?? 'free',
+            user, session, profile: effectiveProfile, loading,
+            plan: effectivePlan,
             isDemo,
             signUp, signIn, signInDemo, signOut, refreshProfile,
         }}>
