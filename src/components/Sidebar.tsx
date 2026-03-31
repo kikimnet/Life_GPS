@@ -80,15 +80,19 @@ export const Sidebar = () => {
 
     const performSignOut = async () => {
         setShowLogoutConfirm(false);
+        try { track(Events.USER_SIGNED_OUT); } catch (_) { /* ignore */ }
+        try { resetAnalytics(); } catch (_) { /* ignore */ }
+        try { await signOut(); } catch (err) { console.error('Erreur déconnexion:', err); }
+        // Force-clear any remaining auth data as safety net
         try {
-            track(Events.USER_SIGNED_OUT);
-            resetAnalytics();
-            await signOut();
-        } catch (err) {
-            console.error('Erreur déconnexion:', err);
-        } finally {
-            navigate('/login');
-        }
+            Object.keys(localStorage)
+                .filter(k => k.startsWith('sb-') || k.includes('supabase'))
+                .forEach(k => localStorage.removeItem(k));
+            localStorage.removeItem('lifegps_demo_active');
+            localStorage.removeItem('lifegps_demo_name');
+        } catch (_) { /* ignore */ }
+        (window as any).__lifegps_unsaved_changes = false;
+        navigate('/login');
     };
 
     return (

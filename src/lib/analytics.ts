@@ -6,7 +6,7 @@ const host = import.meta.env.VITE_POSTHOG_HOST as string;
 let initialized = false;
 
 export const initAnalytics = (userId?: string) => {
-    if (!key || key === 'phc_YOUR_KEY_HERE') return; // Skip if not configured
+    if (!key || key === 'phc_YOUR_KEY_HERE' || key.includes('placeholder')) return; // Skip if not configured
     if (!initialized) {
         posthog.init(key, { api_host: host || 'https://app.posthog.com', autocapture: false });
         initialized = true;
