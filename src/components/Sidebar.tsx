@@ -70,9 +70,7 @@ export const Sidebar = () => {
     const isPro = hasAccess(plan, 'pro');
 
     const handleSignOutClick = () => {
-        console.log('[LifeGPS] handleSignOutClick called');
         const hasUnsaved = (window as any).__lifegps_unsaved_changes === true;
-        console.log('[LifeGPS] hasUnsaved:', hasUnsaved);
         if (hasUnsaved) {
             setShowLogoutConfirm(true);
             return;
@@ -81,15 +79,10 @@ export const Sidebar = () => {
     };
 
     const performSignOut = async () => {
-        console.log('[LifeGPS] performSignOut started');
         setShowLogoutConfirm(false);
         try { track(Events.USER_SIGNED_OUT); } catch (_) { /* ignore */ }
         try { resetAnalytics(); } catch (_) { /* ignore */ }
-        try {
-            console.log('[LifeGPS] calling signOut...');
-            await signOut();
-            console.log('[LifeGPS] signOut completed');
-        } catch (err) { console.error('[LifeGPS] signOut error:', err); }
+        try { await signOut(); } catch (_) { /* ignore */ }
         try {
             Object.keys(localStorage)
                 .filter(k => k.startsWith('sb-') || k.includes('supabase'))
@@ -98,7 +91,6 @@ export const Sidebar = () => {
             localStorage.removeItem('lifegps_demo_name');
         } catch (_) { /* ignore */ }
         (window as any).__lifegps_unsaved_changes = false;
-        console.log('[LifeGPS] navigating to /login');
         navigate('/login');
     };
 
