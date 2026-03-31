@@ -12,6 +12,10 @@ echo "🚀 Déploiement LifeGPS..."
 
 cd $APP_DIR
 
+# Récupérer les dernières modifications
+echo "📥 git pull..."
+git pull origin main
+
 # Build + démarrage du container
 docker compose build --no-cache
 docker compose up -d
