@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User, Bell, Globe, Cpu } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 type Tab = 'profil' | 'système' | 'notifications' | 'intégrations';
@@ -34,9 +35,10 @@ const inputStyle: React.CSSProperties = {
 };
 
 export const Parametres = () => {
+    const { user, profile } = useAuth();
     const [activeTab, setActiveTab] = useState<Tab>('profil');
-    const [name, setName] = useState('kikimnet');
-    const [email, setEmail] = useState('kikimnet@hotmail.com');
+    const [name, setName] = useState(profile?.name ?? user?.user_metadata?.name ?? 'Utilisateur');
+    const [email, setEmail] = useState(user?.email ?? '');
     const [lang, setLang] = useState('FR');
     const [timezone, setTimezone] = useState('America/Toronto');
     const [notifications, setNotifications] = useState({ email: true, remind: true, weekly: false });
