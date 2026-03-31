@@ -163,16 +163,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isDemo) {
             localStorage.removeItem('lifegps_demo_active');
             localStorage.removeItem(DEMO_KEY);
-            // Réinitialise aussi le flag de modifications non sauvegardées
             (window as any).__lifegps_unsaved_changes = false;
             setIsDemo(false);
             setProfile(null);
             return;
         }
+        // Timeout de 5s pour éviter que signOut reste bloqué indéfiniment
         try {
-            await supabase.auth.signOut();
+            await Promise.race([
+                supabase.auth.signOut(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('signOut timeout')), 5000)),
+            ]);
         } catch (err) {
-            console.error('Supabase signOut error (ignored):', err);
+            console.warn('Supabase signOut timeout or error (ignored):', err);
         }
         (window as any).__lifegps_unsaved_changes = false;
         setUser(null);
