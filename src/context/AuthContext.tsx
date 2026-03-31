@@ -56,6 +56,9 @@ const DEMO_PROFILE: UserProfile = {
 
 const DEMO_KEY = 'lifegps_demo_name';
 
+// ─── Admin emails (full access) ────────────────────────────────────────────────
+const ADMIN_EMAILS = ['karim.laifaoui@gmail.com'];
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -65,13 +68,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const [isDemo, setIsDemo] = useState(false);
 
-    const fetchProfile = async (userId: string) => {
+    const fetchProfile = async (userId: string, email?: string) => {
         const { data } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single();
-        if (data) setProfile(data as UserProfile);
+
+        const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
+
+        if (data) {
+            const profileData = data as UserProfile;
+            // Override plan to admin if email is in admin list
+            if (isAdmin && profileData.plan !== 'admin') {
+                profileData.plan = 'admin';
+                // Persist admin status to Supabase
+                supabase.from('profiles').update({ plan: 'admin' } as any).eq('id', userId).then(() => {});
+            }
+            setProfile(profileData);
+        } else if (isAdmin) {
+            // No profile yet — create one as admin
+            const adminProfile: UserProfile = {
+                id: userId, name: email?.split('@')[0] ?? 'Admin', plan: 'admin',
+                stripe_customer_id: null, stripe_subscription_id: null,
+                subscription_status: 'active', created_at: new Date().toISOString(),
+            };
+            supabase.from('profiles').upsert({
+                id: userId, name: adminProfile.name, plan: 'admin', subscription_status: 'active',
+            } as any).then(() => {});
+            setProfile(adminProfile);
+        }
     };
 
     const refreshProfile = async () => {
@@ -111,7 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             clearTimeout(timeout);
             setSession(session);
             setUser(session?.user ?? null);
-            if (session?.user) fetchProfile(session.user.id);
+            if (session?.user) fetchProfile(session.user.id, session.user.email ?? undefined);
             setLoading(false);
         });
 
@@ -120,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setSession(session);
                 setUser(session?.user ?? null);
                 if (session?.user) {
-                    await fetchProfile(session.user.id);
+                    await fetchProfile(session.user.id, session.user.email ?? undefined);
                 } else {
                     setProfile(null);
                 }
